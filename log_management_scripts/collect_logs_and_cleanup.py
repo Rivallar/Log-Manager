@@ -5,11 +5,10 @@ Deletes old logs from logs folders and collects fresh logs from the servers.
 import logging
 import os
 
-from datetime import datetime, timedelta
-
 import asyncssh
 
 from config import settings
+from log_setups import log_setups, LogSetup
 
 logger = logging.getLogger(__name__)
 
@@ -27,21 +26,24 @@ def delete_all_files_in_log_folders():
             except Exception as e:
                 logger.error(f"Failed to delete {file_path}: {e}")
     logger.debug("Cleanup completed.")
-    
+
+
+async def upload_log_file(setup: LogSetup):
+    """Upload single log file from remote host to appropriate local folder"""
+    async with asyncssh.connect(setup.remote_host, username=setup.username,
+                            password=setup.password, port=settings.SSH_PORT) as conn:
+        async with conn.start_sftp_client() as sftp:
+            await sftp.get(setup.remote_file_path, localpath=setup.local_file_path)
+
 
 async def get_fresh_logs():
-    """Uploads fresh logs from a given servers"""
-    logger.debug("Starting to collect fresh logs")
-    curr_date = datetime.now()
-    target_date = curr_date - timedelta(days=1)
-    date_as_string = target_date.strftime("%Y-%m-%d")
-    temp_remote_path = f"/home/logs/agentlogs/AgentLog_41_{date_as_string}_1.zip"
-    temp_local_path = f"log_folders/agentlogs/AgentLog_41_{date_as_string}_1.zip"
-    try:
-        async with asyncssh.connect(settings.AGENTLOG_HOST, username=settings.AGENTLOG_USER, 
-                            password=settings.AGENTLOG_PASSWORD, port=settings.SSH_PORT) as conn:
-            async with conn.start_sftp_client() as sftp:
-                await sftp.get(temp_remote_path, localpath=temp_local_path)
-        logger.debug("Logs collected successfully")
-    except Exception as e:
-        logger.error(f"Failed to get logs: {e}")
+    """Uploads fresh logs from all sources"""
+    logger.info("Starting to collect fresh logs")
+    for setup in log_setups:
+        try:
+            await upload_log_file(setup=setup)
+            logger.debug(f"Logs collected successfully for {setup.local_file_path}")
+        except Exception as e:
+            logger.error(f"Failed to get logs: {e}")
+    logger.info("Logs collection task complete")
+
