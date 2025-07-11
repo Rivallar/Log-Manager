@@ -29,10 +29,11 @@ class LogSetup(BaseModel):
     remote_file_path: str
     local_file_path: str
     archived_db_file_name: str = f"sqlite_diary_data_{formatted_yesterday_date.replace('-', '')}.db"
+    db_data_table_name: str
 
     @property
     def unzipped_db_filename(self) -> str:
-        """Returns a name ofan unzipped database file"""
+        """Returns a name of an unzipped database file"""
         return self.local_file_path.replace(".zip", ".db")
 
 
@@ -45,6 +46,7 @@ USPP41 = LogSetup(
     password=settings.AGENTLOG_PASSWORD,
     remote_file_path=f"/home/logs/agentlogs/AgentLog_41_{formatted_yesterday_date}_1.zip",
     local_file_path=f"{settings.PATH_TO_LOG_FOLDERS}/{LogType.AGENTLOGS.value}/AgentLog_41.zip",
+    db_data_table_name="D_HISTORYLOG"
 )
 log_setups.append(USPP41)
 
@@ -54,6 +56,7 @@ USPP42 = LogSetup(
     username=settings.AGENTLOG_USER,
     password=settings.AGENTLOG_PASSWORD,
     remote_file_path=f"/home/logs/agentlogs/AgentLog_42_{formatted_yesterday_date}_1.zip",
-    local_file_path=f"{settings.PATH_TO_LOG_FOLDERS}/{LogType.AGENTLOGS.value}/AgentLog_42.zip"
+    local_file_path=f"{settings.PATH_TO_LOG_FOLDERS}/{LogType.AGENTLOGS.value}/AgentLog_42.zip",
+    db_data_table_name="D_HISTORYLOG"
 )
 log_setups.append(USPP42)
