@@ -17,7 +17,7 @@ def check_input(
     end_date: date,
     msisdn: Optional[str],
     imsi: Optional[str],
-):
+) -> None:
     """Checks that input is valid, and raises HTTP exception if not"""
     if end_date < start_date:
         raise HTTPException(
@@ -36,8 +36,8 @@ def check_input(
 async def get_logs(
     start_date: date = Query(description="Start date to filter logs"),
     end_date: date = Query(description="End date to filter logs"),
-    msisdn: Optional[str] = Query(None, description="MSISDN to filter logs"),
-    imsi: Optional[str] = Query(None, description="IMSI to filter logs"),
+    msisdn: Optional[int] = Query(None, description="MSISDN to filter logs"),
+    imsi: Optional[int] = Query(None, description="IMSI to filter logs"),
 ) -> list[AgentLogSchema]:
     """Returns logs info according to a query"""
     check_input(start_date, end_date, msisdn, imsi)
