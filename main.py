@@ -4,14 +4,12 @@ Main project file to run fastapi microservice
 import uvicorn
 from fastapi import FastAPI
 
+from api.query_routes import router as query_logs_router
+
 
 app = FastAPI(docs_url="/docs")
-
-@app.get("/get_logs")
-async def get_logs() -> dict:
-    """Returns logs info according to a query"""
-    return { "message": "Here will be logs soon"}
+app.include_router(query_logs_router)
 
 
 if __name__ == '__main__':
-    uvicorn.run("main:app", host="0.0.0.0", port=8081, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8080, reload=True)
