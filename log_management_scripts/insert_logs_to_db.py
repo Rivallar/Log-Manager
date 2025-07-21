@@ -1,17 +1,20 @@
 """
 Functions to transfer logs from log-files into a DB
 """
+import csv
 import logging
 from sqlalchemy import create_engine, text
 
 from database import async_session_factory
 from log_setups import log_setups, LogType
 from models.agentlog_model import AgentLogModel
+from models.commandlog_model import CommandLogModel
 
 logger = logging.getLogger(__name__)
 
 correct_ORM_model = {
-    "agentlogs": AgentLogModel
+    "agentlogs": AgentLogModel,
+    "commandlogs": CommandLogModel
 }
 
 
@@ -22,6 +25,14 @@ def extract_logs_from_log_file(db_data_table_name: str, unzipped_db_filename: st
     with engine.connect() as conn:
         res = conn.execute(text(qry))
     return res.all()
+
+
+def extract_commandlogs(csv_file_path: str) -> list[list]:
+    """Extracts commandlog records from a given log file"""
+    with open(csv_file_path, mode='r', newline='') as file:
+        csv_reader = csv.reader(file)
+        _header = next(csv_reader, None)
+        return list(csv_reader)
 
 
 async def insert_data(log_data: list[tuple], log_type: LogType) -> None:
