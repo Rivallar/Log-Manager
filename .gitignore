@@ -12,3 +12,4 @@ wheels/
 .env
 *.db
 *.zip
+log_folders/
