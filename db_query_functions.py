@@ -8,6 +8,7 @@ from sqlalchemy import select, or_, and_
 
 from database import async_session_factory
 from models.agentlog_model import AgentLogModel
+from models.commandlog_model import CommandLogModel
 
 
 async def query_agentlogs(
@@ -29,6 +30,27 @@ async def query_agentlogs(
                 AgentLogModel.log_time <= end_date,
             )
         ).order_by(AgentLogModel.log_time)
+        result = await session.execute(query)
+        logs = result.scalars().all()
+    return logs
+
+
+async def query_commandlogs(
+    start_date: date,
+    end_date: date,
+    username: Optional[str]
+) -> list[CommandLogModel]:
+    """Request to db to get commandlogs according to query conditions"""
+    async with async_session_factory() as session:
+        filters = []
+        if username:
+            filters.append(CommandLogModel.username.icontains(username))
+        query = select(CommandLogModel).filter(*filters).filter(
+            and_(
+                CommandLogModel.log_time >= start_date,
+                CommandLogModel.log_time <= end_date,
+            )
+        ).order_by(CommandLogModel.log_time)
         result = await session.execute(query)
         logs = result.scalars().all()
     return logs
