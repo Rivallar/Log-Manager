@@ -3,6 +3,7 @@ This file contains information about what logs to collect, where to find them an
 """
 import enum
 from datetime import datetime, timedelta
+from typing import Optional
 
 from pydantic import BaseModel
 
@@ -29,12 +30,17 @@ class LogSetup(BaseModel):
     remote_file_path: str
     local_file_path: str
     archived_db_file_name: str = f"sqlite_diary_data_{formatted_yesterday_date.replace('-', '')}.db"
-    db_data_table_name: str
+    db_data_table_name: Optional[str] = None
 
     @property
     def unzipped_db_filename(self) -> str:
         """Returns a name of an unzipped database file"""
         return self.local_file_path.replace(".zip", ".db")
+
+    @property
+    def unzipped_csv_filename(self) -> str:
+        """Returns a name of an unzipped database file"""
+        return self.local_file_path.replace(".zip", ".csv")
 
 
 log_setups = []
@@ -60,3 +66,14 @@ USPP42 = LogSetup(
     db_data_table_name="D_HISTORYLOG"
 )
 log_setups.append(USPP42)
+
+ASBC144 = LogSetup(
+    log_type=LogType.COMMANDLOGS,
+    remote_host=settings.AGENTLOG_HOST,
+    username=settings.AGENTLOG_USER,
+    password=settings.AGENTLOG_PASSWORD,
+    remote_file_path=f"/home/logs/ommarc/{formatted_yesterday_date.split('-')[0]}/sbc/asbc144/{formatted_yesterday_date}_1.zip",
+    local_file_path=f"{settings.PATH_TO_LOG_FOLDERS}/{LogType.COMMANDLOGS.value}/ASBC144/logs.zip",
+    db_data_table_name="operation_log"
+)
+log_setups.append(ASBC144)
