@@ -38,13 +38,16 @@ async def query_agentlogs(
 async def query_commandlogs(
     start_date: date,
     end_date: date,
-    username: Optional[str]
+    username: Optional[str],
+    node_name: Optional[str]
 ) -> list[CommandLogModel]:
     """Request to db to get commandlogs according to query conditions"""
     async with async_session_factory() as session:
         filters = []
         if username:
             filters.append(CommandLogModel.username.icontains(username))
+        if node_name:
+            filters.append(CommandLogModel.node_name == node_name)
         query = select(CommandLogModel).filter(*filters).filter(
             and_(
                 CommandLogModel.log_time >= start_date,

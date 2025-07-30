@@ -9,6 +9,7 @@ from fastapi import APIRouter, Query, HTTPException, status
 from api.schemas.agentlog_schemas import AgentLogSchema
 from api.schemas.commandlog_schemas import CommandLogSchema
 from db_query_functions import query_agentlogs, query_commandlogs
+from log_setups import commandlog_nodes
 
 router = APIRouter()
 
@@ -55,10 +56,11 @@ async def get_commandlogs(
     start_date: date = Query(description="Start date to filter logs"),
     end_date: date = Query(description="End date to filter logs"),
     username: Optional[str] = Query(None, description="Username of a person executing commands"),
+    node_name: str = Query(None, description="Node name to filter logs", enum=commandlog_nodes),
 ) -> list[CommandLogSchema]:
     """Commandlogs by user and network element"""
     check_date_input(start_date, end_date)
-    logs = await query_commandlogs(start_date, end_date, username)
+    logs = await query_commandlogs(start_date, end_date, username, node_name)
     logs_dto = [CommandLogSchema.model_validate(row, from_attributes=True) for row in logs]
 
     return logs_dto

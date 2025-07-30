@@ -16,3 +16,4 @@ class CommandLogSchema(BaseModel):
     reason: Optional[str] = None
     function: str
     user_ip: str
+    node_name: str

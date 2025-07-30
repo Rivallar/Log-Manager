@@ -18,3 +18,4 @@ class AgentLogSchema(BaseModel):
     node_ip: str
     command: str
     if_error: bool
+    node_name: str
