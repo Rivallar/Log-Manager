@@ -30,8 +30,7 @@ class LogSetup(BaseModel):
     password: str
     remote_file_path: str
     local_file_path: str
-    archived_db_file_name: str = f"sqlite_diary_data_{formatted_yesterday_date.replace('-', '')}.db"
-    db_data_table_name: Optional[str] = None
+    log_pointer: Optional[str] = None       # may be db table name or filename in an archive
 
     @property
     def unzipped_db_filename(self) -> str:
@@ -42,6 +41,11 @@ class LogSetup(BaseModel):
     def unzipped_csv_filename(self) -> str:
         """Returns a name of an unzipped database file"""
         return self.local_file_path.replace(".zip", ".csv")
+
+    @property
+    def archived_db_file_name(self) -> str:
+        """Returns a name of a sqlite file inside an archive"""
+        return f"sqlite_diary_data_{formatted_yesterday_date.replace('-', '')}.db"
 
 
 log_setups = []
@@ -54,7 +58,7 @@ USPP41 = LogSetup(
     password=settings.AGENTLOG_PASSWORD,
     remote_file_path=f"/home/logs/agentlogs/AgentLog_41_{formatted_yesterday_date}_1.zip",
     local_file_path=f"{settings.PATH_TO_LOG_FOLDERS}/{LogType.AGENTLOGS.value}/AgentLog_41.zip",
-    db_data_table_name="D_HISTORYLOG"
+    log_pointer="D_HISTORYLOG"
 )
 log_setups.append(USPP41)
 
@@ -66,7 +70,7 @@ USPP42 = LogSetup(
     password=settings.AGENTLOG_PASSWORD,
     remote_file_path=f"/home/logs/agentlogs/AgentLog_42_{formatted_yesterday_date}_1.zip",
     local_file_path=f"{settings.PATH_TO_LOG_FOLDERS}/{LogType.AGENTLOGS.value}/AgentLog_42.zip",
-    db_data_table_name="D_HISTORYLOG"
+    log_pointer="D_HISTORYLOG"
 )
 log_setups.append(USPP42)
 
@@ -78,7 +82,8 @@ ASBC144 = LogSetup(
     password=settings.AGENTLOG_PASSWORD,
     remote_file_path=f"/home/logs/ommarc/{formatted_yesterday_date.split('-')[0]}/sbc/asbc144/{formatted_yesterday_date}_1.zip",
     local_file_path=f"{settings.PATH_TO_LOG_FOLDERS}/{LogType.COMMANDLOGS.value}/ASBC144/logs.zip",
-    db_data_table_name="operation_log"
+    log_pointer="operation_log"
 )
 log_setups.append(ASBC144)
+
 commandlog_nodes = [setup.node_name for setup in log_setups if setup.log_type == LogType.COMMANDLOGS]

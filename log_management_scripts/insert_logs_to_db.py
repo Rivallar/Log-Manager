@@ -18,9 +18,9 @@ correct_ORM_model = {
 }
 
 
-def extract_logs_from_log_file(db_data_table_name: str, unzipped_db_filename: str) -> list[tuple]:
+def extract_agentlogs(db_data_table_name: str, unzipped_db_filename: str) -> list[tuple]:
     """Extracts log records from a given log file"""
-    qry = f"SELECT * FROM {db_data_table_name}"
+    qry = f"SELECT * FROM {log_pointer}"
     engine = create_engine(f'sqlite:///{unzipped_db_filename}')
     with engine.connect() as conn:
         res = conn.execute(text(qry))
@@ -48,7 +48,12 @@ async def insert_logs_to_db():
     """Transfers all logs from log files to appropriate tables in a database"""
     logger.info("LOG TRANSFER TASK STARTED")
     for setup in log_setups:
-        logs_as_db_rows = extract_logs_from_log_file(setup.db_data_table_name, setup.unzipped_db_filename)
-        await insert_data(logs_as_db_rows, setup.log_type, setup.node_name)
+        match setup.log_type:
+            case LogType.AGENTLOGS:
+                raw_logs = extract_agentlogs(setup.log_pointer, setup.unzipped_db_filename)
+            case LogType.COMMANDLOGS:
+                raw_logs = extract_commandlogs(setup.unzipped_csv_filename)
+
+        await insert_data(raw_logs, setup.log_type, setup.node_name)
         logger.info(f"Collected {len(logs_as_db_rows)} records from {setup.unzipped_db_filename}")
     logger.info("LOG TRANSFER TASK FINISHED")
