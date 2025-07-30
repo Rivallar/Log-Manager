@@ -43,12 +43,13 @@ class AgentLogModel(Base):
     node_ip: Mapped[str]
     command: Mapped[str]
     if_error: Mapped[bool]
+    node_name: Mapped[str]
     true_imsi: Mapped[Optional[int]] = mapped_column(BigInteger)
     true_msisdn: Mapped[Optional[int]] = mapped_column(BigInteger)
     data: Mapped[str]
 
     @staticmethod
-    def from_log_file(db_row: tuple):
+    def from_log_file(db_row: tuple, node_name: str):
         """Transforms a row from logs database to an object"""
         start_command_index = db_row[16].find("MML:")
         command = db_row[16][start_command_index + len("MML:"):]
@@ -64,6 +65,7 @@ class AgentLogModel(Base):
             node_ip=db_row[10],
             command=command,
             if_error=bool(db_row[14]),
+            node_name=node_name,
             true_imsi=true_imsi,
             true_msisdn=true_msisdn,
             data=db_row[16],

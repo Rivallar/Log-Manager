@@ -18,10 +18,11 @@ class CommandLogModel(Base):
     detail: Mapped[str]
     result: Mapped[str]
     reason: Mapped[Optional[str]]
+    node_name: Mapped[str]
     log_time: Mapped[datetime]
 
     @staticmethod
-    def from_log_file(csv_row: list):
+    def from_log_file(csv_row: list, node_name: str):
         """Transforms a row from csv file to an object"""
         return CommandLogModel(
             username=csv_row[0],
@@ -29,6 +30,7 @@ class CommandLogModel(Base):
             user_ip=csv_row[4],
             detail=csv_row[5],
             result="Success" if csv_row[6] == "0" else "Failure",
+            node_name=node_name,
             reason=csv_row[7],
             log_time=datetime.strptime(csv_row[9], '%Y-%m-%d %H:%M:%S')
         )

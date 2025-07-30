@@ -24,6 +24,7 @@ class LogType(enum.Enum):
 class LogSetup(BaseModel):
     """A class to represent all info about how to process a certain log"""
     log_type: LogType
+    node_name: str
     remote_host: str
     username: str
     password: str
@@ -47,6 +48,7 @@ log_setups = []
 
 USPP41 = LogSetup(
     log_type=LogType.AGENTLOGS,
+    node_name="USPP41",
     remote_host=settings.AGENTLOG_HOST,
     username=settings.AGENTLOG_USER,
     password=settings.AGENTLOG_PASSWORD,
@@ -58,6 +60,7 @@ log_setups.append(USPP41)
 
 USPP42 = LogSetup(
     log_type=LogType.AGENTLOGS,
+    node_name="USPP42",
     remote_host=settings.AGENTLOG_HOST,
     username=settings.AGENTLOG_USER,
     password=settings.AGENTLOG_PASSWORD,
@@ -69,6 +72,7 @@ log_setups.append(USPP42)
 
 ASBC144 = LogSetup(
     log_type=LogType.COMMANDLOGS,
+    node_name="ASBC144",
     remote_host=settings.AGENTLOG_HOST,
     username=settings.AGENTLOG_USER,
     password=settings.AGENTLOG_PASSWORD,
@@ -77,3 +81,4 @@ ASBC144 = LogSetup(
     db_data_table_name="operation_log"
 )
 log_setups.append(ASBC144)
+commandlog_nodes = [setup.node_name for setup in log_setups if setup.log_type == LogType.COMMANDLOGS]

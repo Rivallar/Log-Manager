@@ -35,10 +35,10 @@ def extract_commandlogs(csv_file_path: str) -> list[list]:
         return list(csv_reader)
 
 
-async def insert_data(log_data: list[tuple], log_type: LogType) -> None:
+async def insert_data(log_data: list[tuple], log_type: LogType, node_name: str) -> None:
     """Transforms given logs (db table rows) into correct ORM objects and sends them to log db"""
     async with async_session_factory() as session:
-        logs_as_orm = [correct_ORM_model[log_type.value].from_log_file(item) for item in log_data]
+        logs_as_orm = [correct_ORM_model[log_type.value].from_log_file(item, node_name) for item in log_data]
         session.add_all(logs_as_orm)
         await session.commit()
 
@@ -49,6 +49,6 @@ async def insert_logs_to_db():
     logger.info("LOG TRANSFER TASK STARTED")
     for setup in log_setups:
         logs_as_db_rows = extract_logs_from_log_file(setup.db_data_table_name, setup.unzipped_db_filename)
-        await insert_data(logs_as_db_rows, setup.log_type)
+        await insert_data(logs_as_db_rows, setup.log_type, setup.node_name)
         logger.info(f"Collected {len(logs_as_db_rows)} records from {setup.unzipped_db_filename}")
     logger.info("LOG TRANSFER TASK FINISHED")
