@@ -20,16 +20,16 @@ correct_ORM_model = {
 }
 
 
-def extract_agentlogs(db_data_table_name: str, unzipped_db_filename: str) -> list[tuple]:
+def extract_sql_logs(db_data_table_name: str, db_filename: str) -> list[tuple]:
     """Extracts log records from a given log file"""
     qry = f"SELECT * FROM {db_data_table_name}"
-    engine = create_engine(f'sqlite:///{unzipped_db_filename}')
+    engine = create_engine(f'sqlite:///{db_filename}')
     with engine.connect() as conn:
         res = conn.execute(text(qry))
     return res.all()
 
 
-def extract_commandlogs(csv_file_path: str) -> list[list]:
+def extract_csv_logs(csv_file_path: str) -> list[list]:
     """Extracts commandlog records from a given log file"""
     with open(csv_file_path, mode='r', newline='') as file:
         csv_reader = csv.reader(file)
@@ -52,10 +52,12 @@ async def insert_logs_to_db():
     for setup in log_setups:
         match setup.log_type:
             case LogType.AGENTLOGS:
-                raw_logs = extract_agentlogs(setup.log_pointer, setup.unzipped_db_filename)
+                raw_logs = extract_sql_logs(setup.log_pointer, setup.unzipped_db_filename)
             case LogType.COMMANDLOGS:
-                raw_logs = extract_commandlogs(setup.unzipped_csv_filename)
+                raw_logs = extract_csv_logs(setup.unzipped_csv_filename)
+            case LogType.SOAPLOGS:
+                raw_logs = extract_sql_logs(setup.log_pointer, setup.local_file_path)
 
         await insert_data(raw_logs, setup.log_type, setup.node_name)
-        logger.info(f"Collected {len(raw_logs)} records from {setup.unzipped_db_filename}")
+        logger.info(f"Collected {len(raw_logs)} records from {setup.local_file_path}")
     logger.info("LOG TRANSFER TASK FINISHED")
