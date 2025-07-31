@@ -86,4 +86,17 @@ ASBC144 = LogSetup(
 )
 log_setups.append(ASBC144)
 
+
+SSS113 = LogSetup(
+    log_type=LogType.SOAPLOGS,
+    node_name="SSS113",
+    remote_host=settings.AGENTLOG_HOST,
+    username=settings.AGENTLOG_USER,
+    password=settings.AGENTLOG_PASSWORD,
+    remote_file_path=f"/home/logs/soap/sss/sss113/{datetime.now().strftime('%Y%m%d')}_sspi_soap_log_bak.sl3",
+    local_file_path=f"{settings.PATH_TO_LOG_FOLDERS}/{LogType.SOAPLOGS.value}/SSS113/soaplogs.sl3",
+    log_pointer="soap_log"
+)
+log_setups.append(SSS113)
+
 commandlog_nodes = [setup.node_name for setup in log_setups if setup.log_type == LogType.COMMANDLOGS]

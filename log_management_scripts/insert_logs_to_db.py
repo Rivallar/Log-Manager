@@ -9,12 +9,14 @@ from database import async_session_factory
 from log_setups import log_setups, LogType
 from models.agentlog_model import AgentLogModel
 from models.commandlog_model import CommandLogModel
+from models.soaplog_model import SoapLogModel
 
 logger = logging.getLogger(__name__)
 
 correct_ORM_model = {
     "agentlogs": AgentLogModel,
-    "commandlogs": CommandLogModel
+    "commandlogs": CommandLogModel,
+    "soaplogs": SoapLogModel
 }
 
 
