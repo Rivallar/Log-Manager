@@ -9,6 +9,7 @@ from sqlalchemy import select, or_, and_
 from database import async_session_factory
 from models.agentlog_model import AgentLogModel
 from models.commandlog_model import CommandLogModel
+from models.soaplog_model import SoapLogModel
 
 
 async def query_agentlogs(
@@ -56,4 +57,25 @@ async def query_commandlogs(
         ).order_by(CommandLogModel.log_time)
         result = await session.execute(query)
         logs = result.scalars().all()
+    return logs
+
+
+async def query_soaplogs(
+    start_date: date,
+    end_date: date,
+    msisdn: int,
+    node_type: str
+) -> list[SoapLogModel]:
+    """Request to db to get soaplogs according to query conditions"""
+    async with async_session_factory() as session:
+        query = select(SoapLogModel).filter(
+            and_(
+                SoapLogModel.log_time >= start_date,
+                SoapLogModel.log_time <= end_date,
+                SoapLogModel.true_msisdn == msisdn,
+                SoapLogModel.node_name.icontains(node_type)
+                )
+            ).order_by(SoapLogModel.log_time)
+        result = await session.execute(query)
+    logs = result.scalars().all()
     return logs

@@ -8,7 +8,8 @@ from fastapi import APIRouter, Query, HTTPException, status
 
 from api.schemas.agentlog_schemas import AgentLogSchema
 from api.schemas.commandlog_schemas import CommandLogSchema
-from db_query_functions import query_agentlogs, query_commandlogs
+from api.schemas.soaplog_schemas import SoapLogSchema
+from db_query_functions import query_agentlogs, query_commandlogs, query_soaplogs
 from log_setups import commandlog_nodes
 
 router = APIRouter()
@@ -62,5 +63,20 @@ async def get_commandlogs(
     check_date_input(start_date, end_date)
     logs = await query_commandlogs(start_date, end_date, username, node_name)
     logs_dto = [CommandLogSchema.model_validate(row, from_attributes=True) for row in logs]
+
+    return logs_dto
+
+
+@router.get("/get_soaplogs", response_model=list[SoapLogSchema])
+async def get_soaplogs(
+    msisdn: int,
+    start_date: date = Query(description="Start date to filter logs"),
+    end_date: date = Query(description="End date to filter logs"),
+    node_type: str = Query(..., description="AGCF or SSS node type", enum=["AGCF", "SSS"]),
+) -> list[SoapLogSchema]:
+    """Soaplogs by msisdn and network element type"""
+    check_date_input(start_date, end_date)
+    logs = await query_soaplogs(start_date, end_date, msisdn, node_type)
+    logs_dto = [SoapLogSchema.model_validate(row, from_attributes=True) for row in logs]
 
     return logs_dto
