@@ -20,7 +20,7 @@ correct_ORM_model = {
 
 def extract_agentlogs(db_data_table_name: str, unzipped_db_filename: str) -> list[tuple]:
     """Extracts log records from a given log file"""
-    qry = f"SELECT * FROM {log_pointer}"
+    qry = f"SELECT * FROM {db_data_table_name}"
     engine = create_engine(f'sqlite:///{unzipped_db_filename}')
     with engine.connect() as conn:
         res = conn.execute(text(qry))
@@ -55,5 +55,5 @@ async def insert_logs_to_db():
                 raw_logs = extract_commandlogs(setup.unzipped_csv_filename)
 
         await insert_data(raw_logs, setup.log_type, setup.node_name)
-        logger.info(f"Collected {len(logs_as_db_rows)} records from {setup.unzipped_db_filename}")
+        logger.info(f"Collected {len(raw_logs)} records from {setup.unzipped_db_filename}")
     logger.info("LOG TRANSFER TASK FINISHED")
