@@ -9,6 +9,7 @@ from config import settings
 from database import Base
 from models.agentlog_model import AgentLogModel
 from models.commandlog_model import CommandLogModel
+from models.soaplog_model import SoapLogModel
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
