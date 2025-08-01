@@ -2,6 +2,7 @@
 Functions to transfer logs from log-files into a DB
 """
 import csv
+from datetime import datetime, date, timedelta
 import logging
 from sqlalchemy import create_engine, text
 
@@ -29,12 +30,25 @@ def extract_sql_logs(db_data_table_name: str, db_filename: str) -> list[tuple]:
     return res.all()
 
 
-def extract_csv_logs(csv_file_path: str) -> list[list]:
+def extract_csv_logs(csv_file_path: str, agcf=False) -> list[list]:
     """Extracts commandlog records from a given log file"""
     with open(csv_file_path, mode='r', newline='') as file:
         csv_reader = csv.reader(file)
         _header = next(csv_reader, None)
-        return list(csv_reader)
+        if not agcf:
+            return list(csv_reader)
+        else:
+            target_date = date.today() - timedelta(days=2)  # full logs only 2 days ago or later
+            logs = []
+            for row in csv_reader:
+                try:
+                    log_datetime = datetime.strptime(row[3], '%Y-%m-%d %H:%M:%S')
+                except (ValueError, IndexError):
+                    print("Error!")
+                    continue
+                if log_datetime.date() == target_date:
+                    logs.append(row)
+            return logs
 
 
 async def insert_data(log_data: list[tuple], log_type: LogType, node_name: str) -> None:
@@ -56,7 +70,10 @@ async def insert_logs_to_db():
             case LogType.COMMANDLOGS:
                 raw_logs = extract_csv_logs(setup.unzipped_csv_filename)
             case LogType.SOAPLOGS:
-                raw_logs = extract_sql_logs(setup.log_pointer, setup.local_file_path)
+                if "SSS" in setup.node_name:
+                    raw_logs = extract_sql_logs(setup.log_pointer, setup.local_file_path)
+                else:
+                    raw_logs = extract_csv_logs(setup.local_file_path, agcf=True)
 
         await insert_data(raw_logs, setup.log_type, setup.node_name)
         logger.info(f"Collected {len(raw_logs)} records from {setup.local_file_path}")

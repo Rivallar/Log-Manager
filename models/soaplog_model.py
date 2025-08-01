@@ -32,19 +32,34 @@ class SoapLogModel(Base):
         return full_request[start_ind:end_ind].strip()
 
     @staticmethod
-    def from_log_file(db_row: tuple, node_name: str):
-        """Transforms a row from logs database to an object"""
-        match_msisdn = re.search(r'(375\d{9})', db_row[5])
-        return SoapLogModel(
-            log_time=datetime.strptime(db_row[1], '%Y-%m-%d %H:%M:%S:%f'),
-            cmd_code=db_row[3],
-            user_id=db_row[5],
-            request=SoapLogModel.get_request_body(db_row[6]),
-            if_error=bool(db_row[8]),
-            error_description=db_row[9] if db_row[8] else None,
-            node_name=node_name,
+    def from_log_file(db_row: tuple | list, node_name: str):
+        """Transforms a row from logs database to an object.
+        Different logic for SSS and AGCF nodes."""
+        if "SSS" in node_name:
+            match_msisdn = re.search(r'(375\d{9})', db_row[5])
+            return SoapLogModel(
+                log_time=datetime.strptime(db_row[1], '%Y-%m-%d %H:%M:%S:%f'),
+                cmd_code=db_row[3],
+                user_id=db_row[5],
+                request=SoapLogModel.get_request_body(db_row[6]),
+                if_error=bool(db_row[8]),
+                error_description=db_row[9] if db_row[8] else None,
+                node_name=node_name,
+                true_msisdn = int(match_msisdn.group(1)) if match_msisdn else None
+            )
+        else:
+            match_msisdn = re.search(r'(375\d{9})', db_row[-1])
             true_msisdn = int(match_msisdn.group(1)) if match_msisdn else None
-        )
+            return SoapLogModel(
+                log_time=datetime.strptime(db_row[3], '%Y-%m-%d %H:%M:%S'),
+                cmd_code=db_row[2],
+                user_id=str(true_msisdn) or "",
+                request=SoapLogModel.get_request_body(db_row[-1]),
+                if_error=False if db_row[1] == "Operation successful" else True,
+                error_description=db_row[-2] if db_row[1] != "Operation successful" else None,
+                node_name=node_name,
+                true_msisdn=true_msisdn
+            )
 
     __table_args__ = (
         Index("soaplog_time_index", "log_time"),

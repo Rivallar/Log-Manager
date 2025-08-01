@@ -99,4 +99,17 @@ SSS113 = LogSetup(
 )
 log_setups.append(SSS113)
 
+
+AGCF121 = LogSetup(
+    log_type=LogType.SOAPLOGS,
+    node_name="AGCF121",
+    remote_host=settings.AGENTLOG_HOST,
+    username=settings.AGENTLOG_USER,
+    password=settings.AGENTLOG_PASSWORD,
+    remote_file_path=f"/home/logs/soap/agcf/agcf121/SoapLog_{datetime.now().strftime('%Y%m%d')}0500.csv",
+    local_file_path=f"{settings.PATH_TO_LOG_FOLDERS}/{LogType.SOAPLOGS.value}/AGCF121/soaplogs.csv",
+    log_pointer="soap_log"
+)
+log_setups.append(AGCF121)
+
 commandlog_nodes = [setup.node_name for setup in log_setups if setup.log_type == LogType.COMMANDLOGS]
