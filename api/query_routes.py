@@ -1,7 +1,7 @@
 """
 Endpoints to query different types of logs
 """
-from datetime import date
+from datetime import date, timedelta
 from typing import Optional
 
 from fastapi import APIRouter, Query, HTTPException, status
@@ -46,7 +46,7 @@ async def get_logs(
     """Returns logs info according to a query"""
     check_agentlog_input(msisdn, imsi)
     check_date_input(start_date, end_date)
-    logs = await query_agentlogs(msisdn, imsi, start_date, end_date)
+    logs = await query_agentlogs(msisdn, imsi, start_date, end_date + timedelta(days=1))
     logs_dto = [AgentLogSchema.model_validate(row, from_attributes=True) for row in logs]
 
     return logs_dto
@@ -61,7 +61,7 @@ async def get_commandlogs(
 ) -> list[CommandLogSchema]:
     """Commandlogs by user and network element"""
     check_date_input(start_date, end_date)
-    logs = await query_commandlogs(start_date, end_date, username, node_name)
+    logs = await query_commandlogs(start_date, end_date + timedelta(days=1), username, node_name)
     logs_dto = [CommandLogSchema.model_validate(row, from_attributes=True) for row in logs]
 
     return logs_dto
@@ -76,7 +76,8 @@ async def get_soaplogs(
 ) -> list[SoapLogSchema]:
     """Soaplogs by msisdn and network element type"""
     check_date_input(start_date, end_date)
-    logs = await query_soaplogs(start_date, end_date, msisdn, node_type)
+
+    logs = await query_soaplogs(start_date, end_date + timedelta(days=1), msisdn, node_type)
     logs_dto = [SoapLogSchema.model_validate(row, from_attributes=True) for row in logs]
 
     return logs_dto
