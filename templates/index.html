@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Log Manager{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="display-4 mb-4">Log Manager Dashboard</h1>
+        <p class="lead text-muted">Welcome to the Log Manager system. Select a log type to get started.</p>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <h5 class="card-title">Agent Logs</h5>
+                <p class="card-text">Query agent activity logs by date, MSISDN, and IMSI.</p>
+                <a href="/agentlogs" class="btn btn-primary">View Agent Logs</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <h5 class="card-title">Command Logs</h5>
+                <p class="card-text">View command execution logs by username and node.</p>
+                <a href="/commandlogs" class="btn btn-primary">View Command Logs</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <h5 class="card-title">SOAP Logs</h5>
+                <p class="card-text">Query SOAP service logs by MSISDN and node type.</p>
+                <a href="/soaplogs" class="btn btn-primary">View SOAP Logs</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="alert alert-info" role="alert">
+            <h6 class="alert-heading">System Status</h6>
+            <p class="mb-0">Jinja2 template engine is successfully configured and working!</p>
+        </div>
+    </div>
+</div>
+{% endblock %} 
