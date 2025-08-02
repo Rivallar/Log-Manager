@@ -40,13 +40,7 @@
         background-color: rgba(40, 167, 69, 0.1) !important;
     }
     
-    .stats-card {
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        color: white;
-        border-radius: 15px;
-        padding: 1.5rem;
-        margin-bottom: 1rem;
-    }
+
     
     .pagination-info {
         font-size: 0.9rem;
@@ -65,53 +59,7 @@
     </div>
 </div>
 
-<!-- Statistics Cards -->
-<div class="row mb-4" id="statsSection" style="display: none;">
-    <div class="col-md-3">
-        <div class="stats-card">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h6 class="mb-1">Total Logs</h6>
-                    <h3 class="mb-0" id="totalLogs">0</h3>
-                </div>
-                <i class="fas fa-list fa-2x opacity-75"></i>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="stats-card">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h6 class="mb-1">Success</h6>
-                    <h3 class="mb-0" id="successLogs">0</h3>
-                </div>
-                <i class="fas fa-check-circle fa-2x opacity-75"></i>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="stats-card">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h6 class="mb-1">Errors</h6>
-                    <h3 class="mb-0" id="errorLogs">0</h3>
-                </div>
-                <i class="fas fa-exclamation-triangle fa-2x opacity-75"></i>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="stats-card">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h6 class="mb-1">Unique Agents</h6>
-                    <h3 class="mb-0" id="uniqueAgents">0</h3>
-                </div>
-                <i class="fas fa-users fa-2x opacity-75"></i>
-            </div>
-        </div>
-    </div>
-</div>
+
 
 <!-- Search Form -->
 <div class="row mb-4">
@@ -176,11 +124,8 @@
                         <i class="fas fa-table me-2"></i>Search Results
                     </h5>
                     <div>
-                        <button class="btn btn-outline-primary btn-sm me-2" id="exportCsv">
-                            <i class="fas fa-download me-1"></i>Export CSV
-                        </button>
-                        <button class="btn btn-outline-success btn-sm" id="exportJson">
-                            <i class="fas fa-code me-1"></i>Export JSON
+                        <button class="btn btn-outline-primary btn-sm" id="exportExcel">
+                            <i class="fas fa-file-excel me-1"></i>Export Excel
                         </button>
                     </div>
                 </div>
@@ -247,6 +192,7 @@
 
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
 let currentResults = [];
 let currentPage = 1;
@@ -270,8 +216,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     document.getElementById('searchForm').addEventListener('submit', handleSearch);
     document.getElementById('clearForm').addEventListener('click', clearForm);
-    document.getElementById('exportCsv').addEventListener('click', exportCsv);
-    document.getElementById('exportJson').addEventListener('click', exportJson);
+    document.getElementById('exportExcel').addEventListener('click', exportExcel);
 });
 
 async function handleSearch(e) {
@@ -315,7 +260,6 @@ async function handleSearch(e) {
         currentPage = 1;
         
         displayResults();
-        updateStats();
         
     } catch (error) {
         showError(error.message);
@@ -381,19 +325,7 @@ function displayResults() {
     document.getElementById('resultsSection').style.display = 'block';
 }
 
-function updateStats() {
-    const totalLogs = currentResults.length;
-    const successLogs = currentResults.filter(log => !log.if_error).length;
-    const errorLogs = currentResults.filter(log => log.if_error).length;
-    const uniqueAgents = new Set(currentResults.map(log => log.operator)).size;
-    
-    document.getElementById('totalLogs').textContent = totalLogs;
-    document.getElementById('successLogs').textContent = successLogs;
-    document.getElementById('errorLogs').textContent = errorLogs;
-    document.getElementById('uniqueAgents').textContent = uniqueAgents;
-    
-    document.getElementById('statsSection').style.display = 'block';
-}
+
 
 function updatePagination() {
     const totalPages = Math.ceil(currentResults.length / resultsPerPage);
@@ -497,51 +429,66 @@ function showDetails(cmdCode) {
     new bootstrap.Modal(document.getElementById('detailModal')).show();
 }
 
-function exportCsv() {
+function exportExcel() {
     if (currentResults.length === 0) return;
     
+    // Prepare data for Excel
     const headers = ['Time', 'Operator', 'MSISDN', 'IMSI', 'Node Name', 'Node IP', 'Command Code', 'Command', 'Status'];
-    const csvContent = [
-        headers.join(','),
-        ...currentResults.map(log => [
-            formatDateTime(log.log_time),
-            `"${log.operator}"`,
-            log.msisdn || '',
-            log.imsi || '',
-            `"${log.node_name}"`,
-            log.node_ip,
-            log.cmd_code,
-            `"${log.command}"`,
-            log.if_error ? 'Error' : 'Success'
-        ].join(','))
-    ].join('\n');
+    const data = currentResults.map(log => [
+        formatDateTime(log.log_time),
+        log.operator,
+        log.msisdn || '',
+        log.imsi || '',
+        log.node_name,
+        log.node_ip,
+        log.cmd_code,
+        log.command,
+        log.if_error ? 'Error' : 'Success'
+    ]);
     
-    downloadFile(csvContent, 'agent_logs.csv', 'text/csv');
-}
-
-function exportJson() {
-    if (currentResults.length === 0) return;
+    // Create workbook and worksheet
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
     
-    const jsonContent = JSON.stringify(currentResults, null, 2);
-    downloadFile(jsonContent, 'agent_logs.json', 'application/json');
-}
-
-function downloadFile(content, filename, contentType) {
-    const blob = new Blob([content], { type: contentType });
+    // Set column widths
+    const colWidths = [
+        { wch: 20 }, // Time
+        { wch: 15 }, // Operator
+        { wch: 12 }, // MSISDN
+        { wch: 12 }, // IMSI
+        { wch: 15 }, // Node Name
+        { wch: 15 }, // Node IP
+        { wch: 12 }, // Command Code
+        { wch: 40 }, // Command
+        { wch: 10 }  // Status
+    ];
+    ws['!cols'] = colWidths;
+    
+    // Add worksheet to workbook
+    XLSX.utils.book_append_sheet(wb, ws, 'Agent Logs');
+    
+    // Generate Excel file
+    const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    
+    // Download file
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = filename;
+    a.download = 'agent_logs.xlsx';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
 }
 
+
+
+
+
 function clearForm() {
     document.getElementById('searchForm').reset();
     document.getElementById('resultsSection').style.display = 'none';
-    document.getElementById('statsSection').style.display = 'none';
     hideError();
 }
 
