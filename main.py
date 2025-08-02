@@ -5,8 +5,10 @@ from contextlib import asynccontextmanager
 import logging
 import uvicorn
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 
 from api.query_routes import router as query_logs_router
+from web_routes import router as web_routes_router
 from config import settings
 from log_management_scripts.ensure_log_folder_structure import check_folder_structure
 
@@ -21,10 +23,16 @@ async def lifespan(_app: FastAPI):
     yield
 
 
-
+# Create FastAPI app
 app = FastAPI(docs_url="/docs", lifespan=lifespan)
-app.include_router(query_logs_router)
+
+# Mount static files
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# Include routes
+app.include_router(web_routes_router)
+app.include_router(query_logs_router, prefix="/api")
 
 
 if __name__ == '__main__':
-    uvicorn.run("main:app", host="0.0.0.0", port=8080, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8081, reload=True)
