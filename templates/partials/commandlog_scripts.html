@@ -22,7 +22,9 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     document.getElementById('searchForm').addEventListener('submit', handleSearch);
-    document.getElementById('clearForm').addEventListener('click', clearForm);
+    document.getElementById('clearForm').addEventListener('click', function() {
+        clearForm('searchForm', 'resultsSection');
+    });
     document.getElementById('exportExcel').addEventListener('click', exportExcel);
 });
 
@@ -206,29 +208,7 @@ function exportExcel() {
     window.URL.revokeObjectURL(url);
 }
 
-function clearForm() {
-    document.getElementById('searchForm').reset();
-    document.getElementById('resultsSection').style.display = 'none';
-    hideError();
-}
-function showLoading() {
-    document.getElementById('loadingSection').style.display = 'block';
-}
-function hideLoading() {
-    document.getElementById('loadingSection').style.display = 'none';
-}
-function showError(message) {
-    document.getElementById('errorMessage').textContent = message;
-    document.getElementById('errorSection').style.display = 'block';
-}
-function hideError() {
-    document.getElementById('errorSection').style.display = 'none';
-}
-function formatDateTime(dateTimeString) {
-    const date = new Date(dateTimeString);
-    return date.toLocaleString();
-}
-
+// Uses shared clearForm(formId, resultsSectionId) and formatDateTime(dateTimeString) from static/js/main.js
 function onPageChangeCommandLog(page) {
     currentPage = page;
     displayResults();

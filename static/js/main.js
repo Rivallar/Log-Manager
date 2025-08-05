@@ -22,18 +22,42 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('Log Manager JavaScript loaded successfully');
 });
 
-// Utility function for showing loading states
-function showLoading(element) {
-    if (element) {
-        element.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Loading...</span></div>';
-        element.disabled = true;
-    }
+// Shared utility functions for loading and error handling
+function showLoading() {
+    const loadingSection = document.getElementById('loadingSection');
+    if (loadingSection) loadingSection.style.display = 'block';
 }
 
-// Utility function for hiding loading states
-function hideLoading(element, originalText) {
-    if (element) {
-        element.innerHTML = originalText;
-        element.disabled = false;
+function hideLoading() {
+    const loadingSection = document.getElementById('loadingSection');
+    if (loadingSection) loadingSection.style.display = 'none';
+}
+
+function showError(message) {
+    const errorMessage = document.getElementById('errorMessage');
+    const errorSection = document.getElementById('errorSection');
+    if (errorMessage) errorMessage.textContent = message;
+    if (errorSection) errorSection.style.display = 'block';
+}
+
+function hideError() {
+    const errorSection = document.getElementById('errorSection');
+    if (errorSection) errorSection.style.display = 'none';
+} 
+
+// Shared utility function to clear a form and optionally hide results and errors
+function clearForm(formId, resultsSectionId) {
+    const form = document.getElementById(formId);
+    if (form) form.reset();
+    if (resultsSectionId) {
+        const resultsSection = document.getElementById(resultsSectionId);
+        if (resultsSection) resultsSection.style.display = 'none';
     }
+    hideError();
+}
+
+// Shared utility function to format date/time strings
+function formatDateTime(dateTimeString) {
+    const date = new Date(dateTimeString);
+    return date.toLocaleString();
 } 
