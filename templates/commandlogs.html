@@ -3,7 +3,9 @@
 {% block title %}Command Logs - Log Manager{% endblock %}
 
 {% block extra_css %}
-{% include "partials/agentlog_styles.html" %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="{{ url_for('static', path='/css/search_forms.css') }}" rel="stylesheet">
 {% endblock %}
 
 {% block content %}
@@ -113,4 +115,5 @@
 
 {% block extra_js %}
 {% include "partials/commandlog_scripts.html" %}
+<script src="/static/js/pagination.js"></script>
 {% endblock %} 
