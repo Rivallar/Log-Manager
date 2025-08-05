@@ -23,13 +23,10 @@ async def lifespan(_app: FastAPI):
     yield
 
 
-# Create FastAPI app
 app = FastAPI(docs_url="/docs", lifespan=lifespan)
 
-# Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Include routes
 app.include_router(web_routes_router)
 app.include_router(query_logs_router, prefix="/api")
 
