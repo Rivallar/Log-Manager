@@ -1,6 +1,3 @@
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script>
 let currentResults = [];
 let currentPage = 1;
 const resultsPerPage = 20;
@@ -246,7 +243,12 @@ function exportExcel() {
     window.URL.revokeObjectURL(url);
 }
 
-// ... existing code ...
+function onPageChangeAgentLog(page) {
+    currentPage = page;
+    displayResults();
+}
 
-// Uses shared clearForm(formId, resultsSectionId) and formatDateTime(dateTimeString) from static/js/main.js
-</script>
+function renderPaginationAgentLog() {
+    updatePagination(currentResults, resultsPerPage, currentPage, onPageChangeAgentLog);
+    updatePaginationInfo(currentResults, resultsPerPage, currentPage);
+}
