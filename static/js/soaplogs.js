@@ -1,6 +1,3 @@
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script>
 let currentResults = [];
 let currentPage = 1;
 const resultsPerPage = 20;
@@ -215,5 +212,3 @@ function renderPaginationSoapLog() {
     updatePagination(currentResults, resultsPerPage, currentPage, onPageChangeSoapLog);
     updatePaginationInfo(currentResults, resultsPerPage, currentPage);
 }
-// Call renderPaginationSoapLog() after updating results or page
-</script>
