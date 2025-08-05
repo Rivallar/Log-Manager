@@ -2,20 +2,115 @@
 
 {% block title %}Command Logs - Log Manager{% endblock %}
 
+{% block extra_css %}
+{% include "partials/agentlog_styles.html" %}
+{% endblock %}
+
 {% block content %}
 <div class="row">
     <div class="col-12">
-        <h1 class="display-5 mb-4">Command Logs</h1>
-        <p class="lead text-muted">View command execution logs by username and node.</p>
+        <h1 class="display-5 mb-4">
+            <i class="fas fa-terminal me-3"></i>Command Logs
+        </h1>
+        <p class="lead text-muted">Query command execution logs by date, username, and node.</p>
     </div>
 </div>
 
-<div class="row mt-4">
+<!-- Search Form -->
+<div class="row mb-4">
     <div class="col-12">
-        <div class="alert alert-warning" role="alert">
-            <h6 class="alert-heading">Coming Soon</h6>
-            <p class="mb-0">The Command Logs interface is under development. This page will include search forms and results display.</p>
+        <div class="card search-card">
+            <div class="card-body">
+                <h5 class="card-title mb-4">
+                    <i class="fas fa-search me-2"></i>Search Command Logs
+                </h5>
+                <form id="searchForm">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label for="startDate" class="form-label">Start Date</label>
+                            <input type="text" class="form-control datepicker" id="startDate" required>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="endDate" class="form-label">End Date</label>
+                            <input type="text" class="form-control datepicker" id="endDate" required>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="username" class="form-label">Username (Optional)</label>
+                            <input type="text" class="form-control" id="username" placeholder="Enter Username">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="node" class="form-label">Node (Optional)</label>
+                            <input type="text" class="form-control" id="node" placeholder="Enter Node">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-light btn-search">
+                                <i class="fas fa-search me-2"></i>Search Logs
+                            </button>
+                            <button type="button" class="btn btn-outline-light ms-2" id="clearForm">
+                                <i class="fas fa-times me-2"></i>Clear
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </div>
+
+{% include "partials/loading_spinner.html" %}
+
+<!-- Results Section -->
+<div class="row" id="resultsSection" style="display: none;">
+    <div class="col-12">
+        <div class="card results-card">
+            <div class="card-header bg-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-table me-2"></i>Search Results
+                    </h5>
+                    <div>
+                        <button class="btn btn-outline-primary btn-sm" id="exportExcel">
+                            <i class="fas fa-file-excel me-1"></i>Export Excel
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0" id="resultsTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Time</th>
+                                <th>Username</th>
+                                <th>Node</th>
+                                <th>Command</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resultsBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card-footer bg-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="pagination-info">
+                        Showing <span id="showingStart">0</span> to <span id="showingEnd">0</span> of <span id="totalResults">0</span> results
+                    </div>
+                    {% include "partials/pagination.html" %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% include "partials/error_alert.html" %}
+{% include "partials/detail_modal.html" %}
+{% endblock %}
+
+{% block extra_js %}
+{% include "partials/commandlog_scripts.html" %}
 {% endblock %} 

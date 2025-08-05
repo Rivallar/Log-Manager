@@ -1,0 +1,279 @@
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+let currentResults = [];
+let currentPage = 1;
+const resultsPerPage = 20;
+
+document.addEventListener('DOMContentLoaded', function() {
+    const today = new Date();
+    const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+    flatpickr("#startDate", {
+        dateFormat: "Y-m-d",
+        defaultDate: weekAgo,
+        maxDate: today
+    });
+
+    flatpickr("#endDate", {
+        dateFormat: "Y-m-d",
+        defaultDate: today,
+        maxDate: today
+    });
+
+    document.getElementById('searchForm').addEventListener('submit', handleSearch);
+    document.getElementById('clearForm').addEventListener('click', clearForm);
+    document.getElementById('exportExcel').addEventListener('click', exportExcel);
+});
+
+async function handleSearch(e) {
+    e.preventDefault();
+
+    const searchParams = {
+        start_date: document.getElementById('startDate').value,
+        end_date: document.getElementById('endDate').value
+    };
+
+    const usernameValue = document.getElementById('username').value.trim();
+    const nodeValue = document.getElementById('node').value.trim();
+
+    if (usernameValue) {
+        searchParams.username = usernameValue;
+    }
+    if (nodeValue) {
+        searchParams.node = nodeValue;
+    }
+
+    showLoading();
+    hideError();
+
+    try {
+        const response = await fetch('/api/get_commandlogs?' + new URLSearchParams(searchParams));
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.detail || 'Failed to fetch logs');
+        }
+        const results = await response.json();
+        currentResults = results;
+        currentPage = 1;
+        displayResults();
+    } catch (error) {
+        showError(error.message);
+    } finally {
+        hideLoading();
+    }
+}
+
+function displayResults() {
+    const startIndex = (currentPage - 1) * resultsPerPage;
+    const endIndex = startIndex + resultsPerPage;
+    const pageResults = currentResults.slice(startIndex, endIndex);
+
+    const tbody = document.getElementById('resultsBody');
+    tbody.innerHTML = '';
+
+    if (pageResults.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="text-center text-muted py-4">
+                    <i class="fas fa-inbox fa-3x mb-3"></i>
+                    <p>No logs found for the specified criteria</p>
+                </td>
+            </tr>
+        `;
+    } else {
+        pageResults.forEach(log => {
+            const row = document.createElement('tr');
+            row.className = log.result === 'Success' ? 'success-row' : 'error-row';
+            row.innerHTML = `
+                <td>${formatDateTime(log.log_time)}</td>
+                <td><strong>${log.username}</strong></td>
+                <td>
+                    <span class="badge bg-secondary">${log.node_name}</span>
+                    <br><small class="text-muted">${log.user_ip}</small>
+                </td>
+                <td>
+                    <code class="text-sm">${log.function}</code>
+                    <br><small class="text-muted">${log.detail}</small>
+                </td>
+                <td>
+                    ${log.result === 'Success' ? 
+                        '<span class="badge bg-success status-badge"><i class="fas fa-check me-1"></i>Success</span>' : 
+                        '<span class="badge bg-danger status-badge"><i class="fas fa-times me-1"></i>Error</span>'
+                    }
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary" onclick="showDetails('${log.log_time}', '${log.username}')">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+    updatePagination();
+    updatePaginationInfo();
+    document.getElementById('resultsSection').style.display = 'block';
+}
+
+function updatePagination() {
+    const totalPages = Math.ceil(currentResults.length / resultsPerPage);
+    const pagination = document.getElementById('pagination');
+    pagination.innerHTML = '';
+    if (totalPages <= 1) return;
+    // Previous button
+    const prevLi = document.createElement('li');
+    prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+    prevLi.innerHTML = `<a class="page-link" href="#" onclick="changePage(${currentPage - 1})">Previous</a>`;
+    pagination.appendChild(prevLi);
+    // Page numbers
+    for (let i = 1; i <= totalPages; i++) {
+        if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+            const li = document.createElement('li');
+            li.className = `page-item ${i === currentPage ? 'active' : ''}`;
+            li.innerHTML = `<a class="page-link" href="#" onclick="changePage(${i})">${i}</a>`;
+            pagination.appendChild(li);
+        } else if (i === currentPage - 3 || i === currentPage + 3) {
+            const li = document.createElement('li');
+            li.className = 'page-item disabled';
+            li.innerHTML = '<span class="page-link">...</span>';
+            pagination.appendChild(li);
+        }
+    }
+    // Next button
+    const nextLi = document.createElement('li');
+    nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+    nextLi.innerHTML = `<a class="page-link" href="#" onclick="changePage(${currentPage + 1})">Next</a>`;
+    pagination.appendChild(nextLi);
+}
+
+function updatePaginationInfo() {
+    const startIndex = (currentPage - 1) * resultsPerPage + 1;
+    const endIndex = Math.min(currentPage * resultsPerPage, currentResults.length);
+    document.getElementById('showingStart').textContent = currentResults.length > 0 ? startIndex : 0;
+    document.getElementById('showingEnd').textContent = endIndex;
+    document.getElementById('totalResults').textContent = currentResults.length;
+}
+
+function changePage(page) {
+    const totalPages = Math.ceil(currentResults.length / resultsPerPage);
+    if (page >= 1 && page <= totalPages) {
+        currentPage = page;
+        displayResults();
+    }
+}
+
+function showDetails(logTime, username) {
+    const log = currentResults.find(l => l.log_time === logTime && l.username === username);
+    if (!log) return;
+    const modalBody = document.getElementById('modalBody');
+    modalBody.innerHTML = `
+        <div class="row">
+            <div class="col-md-6">
+                <h6>Basic Information</h6>
+                <table class="table table-sm">
+                    <tr><td><strong>Username:</strong></td><td>${log.username}</td></tr>
+                    <tr><td><strong>Function:</strong></td><td>${log.function}</td></tr>
+                    <tr><td><strong>Status:</strong></td><td>
+                        ${log.result === 'Success' ? 
+                            '<span class="badge bg-success">Success</span>' : 
+                            '<span class="badge bg-danger">Error</span>'
+                        }
+                    </td></tr>
+                    <tr><td><strong>Reason:</strong></td><td>${log.reason || '-'}</td></tr>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <h6>Network Information</h6>
+                <table class="table table-sm">
+                    <tr><td><strong>Node Name:</strong></td><td>${log.node_name}</td></tr>
+                    <tr><td><strong>User IP:</strong></td><td>${log.user_ip}</td></tr>
+                </table>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-12">
+                <h6>Command Details</h6>
+                <div class="bg-light p-3 rounded">
+                    <code>${log.detail}</code>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-12">
+                <h6>Timestamp</h6>
+                <p class="text-muted">${formatDateTime(log.log_time)}</p>
+            </div>
+        </div>
+    `;
+    new bootstrap.Modal(document.getElementById('detailModal')).show();
+}
+
+function exportExcel() {
+    if (currentResults.length === 0) return;
+    // Prepare data for Excel
+    const headers = ['Time', 'Username', 'Node Name', 'User IP', 'Function', 'Detail', 'Result', 'Reason'];
+    const data = currentResults.map(log => [
+        formatDateTime(log.log_time),
+        log.username,
+        log.node_name,
+        log.user_ip,
+        log.function,
+        log.detail,
+        log.result,
+        log.reason || ''
+    ]);
+    // Create workbook and worksheet
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
+    // Set column widths
+    const colWidths = [
+        { wch: 20 }, // Time
+        { wch: 15 }, // Username
+        { wch: 15 }, // Node Name
+        { wch: 15 }, // User IP
+        { wch: 15 }, // Function
+        { wch: 40 }, // Detail
+        { wch: 10 }, // Result
+        { wch: 20 }  // Reason
+    ];
+    ws['!cols'] = colWidths;
+    // Add worksheet to workbook
+    XLSX.utils.book_append_sheet(wb, ws, 'Command Logs');
+    // Generate Excel file
+    const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    // Download file
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'command_logs.xlsx';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+}
+
+function clearForm() {
+    document.getElementById('searchForm').reset();
+    document.getElementById('resultsSection').style.display = 'none';
+    hideError();
+}
+function showLoading() {
+    document.getElementById('loadingSection').style.display = 'block';
+}
+function hideLoading() {
+    document.getElementById('loadingSection').style.display = 'none';
+}
+function showError(message) {
+    document.getElementById('errorMessage').textContent = message;
+    document.getElementById('errorSection').style.display = 'block';
+}
+function hideError() {
+    document.getElementById('errorSection').style.display = 'none';
+}
+function formatDateTime(dateTimeString) {
+    const date = new Date(dateTimeString);
+    return date.toLocaleString();
+}
+</script>
