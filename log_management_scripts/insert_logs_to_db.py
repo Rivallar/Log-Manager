@@ -64,16 +64,22 @@ async def insert_logs_to_db():
     """Transfers all logs from log files to appropriate tables in a database"""
     logger.info("LOG TRANSFER TASK STARTED")
     for setup in log_setups:
-        match setup.log_type:
-            case LogType.AGENTLOGS:
-                raw_logs = extract_sql_logs(setup.log_pointer, setup.unzipped_db_filename)
-            case LogType.COMMANDLOGS:
-                raw_logs = extract_csv_logs(setup.unzipped_csv_filename)
-            case LogType.SOAPLOGS:
-                if "SSS" in setup.node_name:
-                    raw_logs = extract_sql_logs(setup.log_pointer, setup.local_file_path)
-                else:
-                    raw_logs = extract_csv_logs(setup.local_file_path, agcf=True)
+        try:
+            match setup.log_type:
+                case LogType.AGENTLOGS:
+                    raw_logs = extract_sql_logs(setup.log_pointer, setup.unzipped_db_filename)
+                case LogType.COMMANDLOGS:
+                    raw_logs = extract_csv_logs(setup.unzipped_csv_filename)
+                case LogType.SOAPLOGS:
+                    if "SSS" in setup.node_name:
+                        raw_logs = extract_sql_logs(setup.log_pointer, setup.local_file_path)
+                    else:
+                        raw_logs = extract_csv_logs(setup.local_file_path, agcf=True)
+        except FileNotFoundError:
+            logger.error(
+                f"Unable to insert logs to db: unzipped log file for {setup.node_name} was not found. Skipping"
+            )
+            continue
 
         await insert_data(raw_logs, setup.log_type, setup.node_name)
         logger.info(f"Collected {len(raw_logs)} records from {setup.local_file_path}")

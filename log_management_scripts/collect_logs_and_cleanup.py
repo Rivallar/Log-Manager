@@ -48,12 +48,18 @@ def unzip_commandlog(setup: LogSetup) -> None:
 
 def unzip_and_cleanup(setup: LogSetup) -> None:
     """Unzips an uploaded log zipfile and deletes its archive"""
-    match setup.log_type:
-        case LogType.AGENTLOGS:
-            unzip_apentlog(setup)
-        case LogType.COMMANDLOGS:
-            unzip_commandlog(setup)
-    os.remove(setup.local_file_path)
+    try:
+        match setup.log_type:
+            case LogType.AGENTLOGS:
+                unzip_apentlog(setup)
+            case LogType.COMMANDLOGS:
+                unzip_commandlog(setup)
+            case LogType.SOAPLOGS:
+                return
+        os.remove(setup.local_file_path)
+    except FileNotFoundError:
+        logger.error(f"Unable to unzip/delete {setup.local_file_path}. File not found.Skipping.")
+
 
 
 async def upload_log_file(sftp, setup: LogSetup) -> None:
@@ -68,12 +74,13 @@ async def upload_log_file(sftp, setup: LogSetup) -> None:
 async def get_fresh_logs_from_one_server(log_setups: list[LogSetup]) -> None:
     """Uploads all fresh logs from a server (in case all logs are stored at one server)"""
     logger.info("Starting to collect fresh logs")
-    async with asyncssh.connect(settings.AGENTLOG_USER, username=settings.AGENTLOG_PASSWORD,
-                            password=settings.AGENTLOG_HOST, port=settings.SSH_PORT) as conn:
+    async with asyncssh.connect(settings.AGENTLOG_HOST, username=settings.AGENTLOG_USER,
+                                password=settings.AGENTLOG_PASSWORD, port=settings.SSH_PORT,
+                                known_hosts=None) as conn:
         async with conn.start_sftp_client() as sftp:
             tasks = []
             for setup in log_setups:
-                with open(f"{setup.local_file_path}", "w") as dummy_file:
+                with open(f"{setup.local_file_path}", "w") as _dummy_file:
                     pass
                 tasks.append(asyncio.create_task(upload_log_file(sftp, setup)))
             await asyncio.gather(*tasks)

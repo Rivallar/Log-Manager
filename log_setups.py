@@ -62,17 +62,17 @@ USPP41 = LogSetup(
 )
 log_setups.append(USPP41)
 
-USPP42 = LogSetup(
+USPP44 = LogSetup(
     log_type=LogType.AGENTLOGS,
-    node_name="USPP42",
+    node_name="USPP44",
     remote_host=settings.AGENTLOG_HOST,
     username=settings.AGENTLOG_USER,
     password=settings.AGENTLOG_PASSWORD,
-    remote_file_path=f"/home/logs/agentlogs/AgentLog_42_{formatted_yesterday_date}_1.zip",
+    remote_file_path=f"/home/logs/agentlogs/AgentLog_44_{formatted_yesterday_date}_1.zip",
     local_file_path=f"{settings.PATH_TO_LOG_FOLDERS}/{LogType.AGENTLOGS.value}/AgentLog_42.zip",
     log_pointer="D_HISTORYLOG"
 )
-log_setups.append(USPP42)
+log_setups.append(USPP44)
 
 ASBC144 = LogSetup(
     log_type=LogType.COMMANDLOGS,
@@ -80,7 +80,7 @@ ASBC144 = LogSetup(
     remote_host=settings.AGENTLOG_HOST,
     username=settings.AGENTLOG_USER,
     password=settings.AGENTLOG_PASSWORD,
-    remote_file_path=f"/home/logs/ommarc/{formatted_yesterday_date.split('-')[0]}/sbc/asbc144/{formatted_yesterday_date}_1.zip",
+    remote_file_path=f"/home/logs/ommarc/{formatted_yesterday_date.split('-')[0]}/sbc/asbc144/{formatted_yesterday_date} *.zip",
     local_file_path=f"{settings.PATH_TO_LOG_FOLDERS}/{LogType.COMMANDLOGS.value}/ASBC144/logs.zip",
     log_pointer="operation_log"
 )
