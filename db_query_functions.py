@@ -79,3 +79,17 @@ async def query_soaplogs(
         result = await session.execute(query)
     logs = result.scalars().all()
     return logs
+
+
+async def query_last_logs(log_model: AgentLogModel | CommandLogModel | SoapLogModel,
+                          limit: int,
+                          node_name: str = None) -> list[AgentLogModel | CommandLogModel | SoapLogModel]:
+    """Returns N last records of a requested log type."""
+    async with async_session_factory() as session:
+        filters = []
+        if node_name:
+            filters.append(log_model.node_name == node_name)
+        query = select(log_model).filter(*filters).limit(limit).order_by(log_model.log_time)
+        result = await session.execute(query)
+    logs = result.scalars().all()
+    return logs
