@@ -6,6 +6,7 @@ class Settings(BaseSettings):
 
     LOGGING_LEVEL: str
     PATH_TO_LOG_FOLDERS: str
+    SERVICE_ROUTES_NEEDED: int
 
     SSH_PORT: str
 
