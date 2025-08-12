@@ -1,6 +1,7 @@
 """
 Main project file to run fastapi microservice
 """
+import asyncio
 from contextlib import asynccontextmanager
 import logging
 import uvicorn
@@ -10,7 +11,7 @@ from fastapi.staticfiles import StaticFiles
 from api.query_routes import router as query_logs_router
 from api.service_routes import router as service_router
 from config import settings
-from log_management_scripts import update_db_with_fresh_logs
+from log_management_scripts import update_logs_by_schedule
 from log_management_scripts.ensure_log_folder_structure import check_folder_structure
 from web_routes import router as web_routes_router
 
@@ -22,7 +23,8 @@ logging.basicConfig(level=settings.LOGGING_LEVEL)
 async def lifespan(_app: FastAPI):
     """Starts scheduled tasks and preparation scripts"""
     check_folder_structure()
-    await update_db_with_fresh_logs()
+    asyncio.create_task(update_logs_by_schedule())
+    # await update_db_with_fresh_logs()
     yield
 
 

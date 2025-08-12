@@ -1,13 +1,14 @@
 """
 Deletes old logs from logs folders and collects fresh logs from the servers.
 """
+from datetime import datetime, timedelta
+
 import asyncio
 import logging
 import os
 import zipfile
 
 import asyncssh
-from datetime import datetime, timedelta
 from sqlalchemy import delete
 
 from config import settings
