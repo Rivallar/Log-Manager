@@ -7,9 +7,15 @@ import os
 import zipfile
 
 import asyncssh
+from datetime import datetime, timedelta
+from sqlalchemy import delete
 
 from config import settings
+from database import async_session_factory
 from log_setups import LogSetup, LogType
+from models.agentlog_model import AgentLogModel
+from models.commandlog_model import CommandLogModel
+from models.soaplog_model import SoapLogModel
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +34,15 @@ def delete_all_files_in_log_folders() -> None:
                 logger.error(f"Failed to delete {file_path}: {e}")
     logger.debug("Cleanup completed.")
 
+
+async def delete_old_logs():
+    """Deletes old logs from db"""
+    delete_date = datetime.now() - timedelta(days=settings.DAYS_TO_KEEP_LOGS)
+    async with async_session_factory() as session:
+        for model in (AgentLogModel, CommandLogModel, SoapLogModel):
+            stmt = delete(model).where(model.log_time < delete_date)
+            await session.execute(stmt)
+        await session.commit()
 
 def unzip_apentlog(setup: LogSetup) -> None:
     """Unzips an archive of agentlogs"""
