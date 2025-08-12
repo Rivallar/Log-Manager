@@ -6,7 +6,7 @@ from fastapi import APIRouter, Query
 from api.schemas.agentlog_schemas import AgentLogSchema
 from api.schemas.commandlog_schemas import CommandLogSchema
 from api.schemas.soaplog_schemas import SoapLogSchema
-from db_query_functions import query_last_logs
+from db_query_functions import query_last_logs, delete_db_records
 from log_setups import log_setups
 from models.agentlog_model import AgentLogModel
 from models.commandlog_model import CommandLogModel
@@ -34,3 +34,12 @@ async def get_last_logs(log_type: str = Query(..., description="log type", enum=
     logs = await query_last_logs(log_model, n_logs, node_name)
     logs_dto = [log_schema.model_validate(row, from_attributes=True) for row in logs]
     return logs_dto
+
+
+@router.delete("/del_records_from_db")
+async def del_records(node_name: str = Query(None, description="node names", enum=node_names),
+                      log_type: str = Query(None, description="log type", enum=["agentlog", "commandlog", "soaplog"])):
+    """Deletes all or records of a chosen element from a db"""
+    log_model = log_dict[log_type][0] if log_type else None
+    await delete_db_records(log_model, node_name)
+    return {"status": "OK"}

@@ -4,7 +4,7 @@ Tools to query a data from a database
 from datetime import date
 from typing import Optional
 
-from sqlalchemy import select, or_, and_
+from sqlalchemy import select, or_, and_, delete
 
 from database import async_session_factory
 from models.agentlog_model import AgentLogModel
@@ -93,3 +93,21 @@ async def query_last_logs(log_model: AgentLogModel | CommandLogModel | SoapLogMo
         result = await session.execute(query)
     logs = result.scalars().all()
     return logs
+
+
+async def delete_db_records(log_model: None | AgentLogModel | CommandLogModel | SoapLogModel,
+                            node_name: str = None) -> None:
+    """Deletes records from DB"""
+    async with async_session_factory() as session:
+        if log_model:
+            stmt = delete(log_model)
+            if node_name:
+                stmt = delete(log_model).where(log_model.node_name == node_name)
+            await session.execute(stmt)
+        else:
+            for model in (AgentLogModel, CommandLogModel, SoapLogModel):
+                stmt = delete(model)
+                await session.execute(stmt)
+        await session.commit()
+
+
